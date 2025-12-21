@@ -20,15 +20,15 @@ const App: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [deviceId, setDeviceId] = useState<string | null>(null);
     const [player, setPlayer] = useState<any>(null);
+    const [isPaused, setIsPaused] = useState(true);
+    const [currentTrack, setCurrentTrack] = useState<any>(null);
+    const [playlists, setPlaylists] = useState<any[]>([]);
+    const [likedSongs, setLikedSongs] = useState<any[]>([]);
 
-    /**
-     * 🔐 Handle redirect from Spotify and exchange code for token
-     */
+    // Exchange authorization code for token
     useEffect(() => {
-        console.log('client id: ' + SPOTIFY_CLIENT_ID);
         const code = new URLSearchParams(window.location.search).get("code");
         const codeVerifier = sessionStorage.getItem("code_verifier");
-
         if (!code || !codeVerifier) return;
 
         const body = new URLSearchParams();
@@ -45,16 +45,14 @@ const App: React.FC = () => {
             .then((res) => {
                 setToken(res.data.access_token);
                 sessionStorage.removeItem("code_verifier");
-                window.history.replaceState({}, document.title, "/"); // clean URL
+                window.history.replaceState({}, document.title, "/");
             })
             .catch((err) => {
                 console.error("Token error:", err.response?.data || err);
             });
     }, []);
 
-    /**
-     * Initialize Spotify Web Playback SDK once we have a token
-     */
+    // Initialize Web Playback SDK
     useEffect(() => {
         if (!token) return;
 
@@ -71,32 +69,28 @@ const App: React.FC = () => {
             });
 
             player.addListener("ready", ({ device_id }: any) => {
-                console.log("Web Playback SDK ready, device_id:", device_id);
                 setDeviceId(device_id);
             });
 
-            player.addListener("not_ready", ({ device_id }: any) => {
-                console.warn("Device went offline:", device_id);
+            player.addListener("player_state_changed", (state: any) => {
+                if (!state) return;
+                setIsPaused(state.paused);
+                setCurrentTrack(state.track_window.current_track);
             });
-
-            player.addListener("initialization_error", ({ message }: any) =>
-                console.error(message)
-            );
-            player.addListener("authentication_error", ({ message }: any) =>
-                console.error(message)
-            );
-            player.addListener("account_error", ({ message }: any) =>
-                console.error(message)
-            );
 
             player.connect();
             setPlayer(player);
         };
     }, [token]);
 
-    /**
-     * Login with Spotify (PKCE)
-     */
+    useEffect(() => {
+        if (token) loadPlaylists();
+    }, [token]);
+
+
+    useEffect(() => {
+        if (token) loadLikedSongs();
+    }, [token]);
     const login = async () => {
         const codeVerifier = generateRandomString(128);
         sessionStorage.setItem("code_verifier", codeVerifier);
@@ -105,9 +99,6 @@ const App: React.FC = () => {
         window.location.href = getAuthURL(codeChallenge);
     };
 
-    /**
-     * 🔍 Search tracks
-     */
     const searchTracks = async () => {
         if (!token) return;
 
@@ -123,35 +114,80 @@ const App: React.FC = () => {
         setTracks(res.data.tracks.items);
     };
 
-    /**
-     * ▶️ Play track in browser
-     */
     const playTrack = async (uri: string) => {
-        if (!token || !deviceId) {
-            console.error("No active Web Playback SDK device");
-            return;
-        }
+        if (!token || !deviceId) return;
 
         await axios.put(
             `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
             { uris: [uri] },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
         );
     };
 
-    if (!token) {
-        return <button onClick={login}>Login with Spotify</button>;
-    }
+    const togglePlay = () => player?.togglePlay();
+    const previousTrack = () => player?.previousTrack();
+    const restartTrack = async () => {
+        if (!token || !deviceId) return;
+
+        await axios.put(
+            `https://api.spotify.com/v1/me/player/seek?position_ms=0&device_id=${deviceId}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+    };
+
+    const loadLikedSongs = async () => {
+        if (!token) return;
+
+        const res = await axios.get("https://api.spotify.com/v1/me/tracks", {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { limit: 50 }, // adjust as needed
+        });
+
+        // res.data.items is an array of { added_at, track }
+        const likedTracks = res.data.items.map((item: any) => item.track);
+        setLikedSongs(likedTracks);
+    };
+
+    const loadPlaylists = async () => {
+        if (!token) return;
+
+        const res = await axios.get("https://api.spotify.com/v1/me/playlists", {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setPlaylists(res.data.items);
+    };
+
+    if (!token) return <button onClick={login}>Login with Spotify</button>;
 
     return (
-        <div>
-            <h1>Spotify Web Audio Player</h1>
+        <div style={{ padding: 20 }}>
+            <h1>Raphael's Audio Player</h1>
 
+            {/* Current track info and controls */}
+            {currentTrack && (
+                <div style={{ marginBottom: 20 }}>
+                    <img
+                        src={currentTrack.album.images[0]?.url}
+                        alt="album"
+                        width={200}
+                    />
+                    <div>
+                        <strong>{currentTrack.name}</strong>
+                        <div>
+                            {currentTrack.artists.map((a: any) => a.name).join(", ")}
+                        </div>
+                    </div>
+                    <div style={{ marginTop: 10 }}>
+                        <button onClick={restartTrack}>⏮ Restart</button>
+                        <button onClick={previousTrack}>⏪ Previous</button>
+                        <button onClick={togglePlay}>{isPaused ? "▶ Play" : "⏸ Pause"}</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Track search */}
             <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -161,10 +197,47 @@ const App: React.FC = () => {
 
             <ul>
                 {tracks.map((track) => (
-                    <li key={track.id}>
-                        {track.name} –{" "}
-                        {track.artists.map((a: any) => a.name).join(", ")}
-                        <button onClick={() => playTrack(track.uri)}>Play</button>
+                    <li key={track.id} style={{ margin: 10 }}>
+                        {track.name} – {track.artists.map((a: any) => a.name).join(", ")}
+                        <button style={{ marginLeft: 10 }} onClick={() => playTrack(track.uri)}>Play</button>
+                    </li>
+                ))}
+            </ul>
+
+            {/* User playlists */}
+            <h2>Your Songs</h2>
+            <ul>
+                {likedSongs.map((track) => (
+                    <li key={track.id} style={{ display: "flex", alignItems: "center", margin: 10 }}>
+                        {track.album.images && track.album.images[0] && (
+                            <img
+                                src={track.album.images[0].url}
+                                alt="album"
+                                width={60}
+                                height={60}
+                                style={{ marginRight: 10 }}
+                            />
+                        )}
+                        <div style={{ flex: 1 }}>
+                            <strong>{track.name}</strong>
+                            <div>{track.artists.map((a: any) => a.name).join(", ")}</div>
+                        </div>
+                        <button onClick={() => playTrack(track.uri)}>▶ Play</button>
+                    </li>
+                ))}
+            </ul>
+            <h2>Your Playlists</h2>
+            <ul>
+                {playlists.map((playlist) => (
+                    <li key={playlist.id} style={{ margin: 10 }}>
+                        {playlist.images && playlist.images[0] && (
+                            <img
+                                src={playlist.images[0].url}
+                                alt="playlist"
+                                width={60}
+                            />
+                        )}
+                        <span style={{ marginLeft: 10 }}>{playlist.name}</span>
                     </li>
                 ))}
             </ul>
