@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-    getAuthURL,
-    generateRandomString,
-    generateCodeChallenge,
-} from "./utils/spotifyAuth";
+
 import { REDIRECT_URI, SPOTIFY_CLIENT_ID } from "./spotifyConfig";
+import Login from "./Login";
+import CurrentTrack from "./CurrentTrack";
 
 declare global {
     interface Window {
@@ -25,6 +23,20 @@ const App: React.FC = () => {
     const [playlists, setPlaylists] = useState<any[]>([]);
     const [likedSongs, setLikedSongs] = useState<any[]>([]);
 
+
+  /*  useEffect(() => {
+        if (token) {
+            sessionStorage.setItem("spotify_token", token);
+        }
+    }, [token]);
+
+// On mount, try to restore token
+    useEffect(() => {
+        const savedToken = sessionStorage.getItem("spotify_token");
+        if (savedToken) setToken(savedToken);
+    }, []);
+
+   */
     // Exchange authorization code for token
     useEffect(() => {
         const code = new URLSearchParams(window.location.search).get("code");
@@ -51,7 +63,6 @@ const App: React.FC = () => {
                 console.error("Token error:", err.response?.data || err);
             });
     }, []);
-
     // Initialize Web Playback SDK
     useEffect(() => {
         if (!token) return;
@@ -83,6 +94,7 @@ const App: React.FC = () => {
         };
     }, [token]);
 
+
     useEffect(() => {
         if (token) loadPlaylists();
     }, [token]);
@@ -91,13 +103,7 @@ const App: React.FC = () => {
     useEffect(() => {
         if (token) loadLikedSongs();
     }, [token]);
-    const login = async () => {
-        const codeVerifier = generateRandomString(128);
-        sessionStorage.setItem("code_verifier", codeVerifier);
 
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
-        window.location.href = getAuthURL(codeChallenge);
-    };
 
     const searchTracks = async () => {
         if (!token) return;
@@ -126,6 +132,7 @@ const App: React.FC = () => {
 
     const togglePlay = () => player?.togglePlay();
     const previousTrack = () => player?.previousTrack();
+
     const restartTrack = async () => {
         if (!token || !deviceId) return;
 
@@ -159,33 +166,19 @@ const App: React.FC = () => {
         setPlaylists(res.data.items);
     };
 
-    if (!token) return <button onClick={login}>Login with Spotify</button>;
+    if (!token) {
+        return <Login></Login>;
+    }
 
     return (
         <div style={{ padding: 20 }}>
             <h1>Raphael's Audio Player</h1>
 
-            {/* Current track info and controls */}
-            {currentTrack && (
-                <div style={{ marginBottom: 20 }}>
-                    <img
-                        src={currentTrack.album.images[0]?.url}
-                        alt="album"
-                        width={200}
-                    />
-                    <div>
-                        <strong>{currentTrack.name}</strong>
-                        <div>
-                            {currentTrack.artists.map((a: any) => a.name).join(", ")}
-                        </div>
-                    </div>
-                    <div style={{ marginTop: 10 }}>
-                        <button onClick={restartTrack}>⏮ Restart</button>
-                        <button onClick={previousTrack}>⏪ Previous</button>
-                        <button onClick={togglePlay}>{isPaused ? "▶ Play" : "⏸ Pause"}</button>
-                    </div>
-                </div>
-            )}
+
+            <CurrentTrack currentTrack={currentTrack} isPaused={isPaused}
+                          restartTrack={restartTrack}
+                          togglePlay={togglePlay} ></CurrentTrack>
+
 
             {/* Track search */}
             <input
