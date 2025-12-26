@@ -17,9 +17,12 @@ const Login = () => {
     };
 
     return (
-        <button onClick={login}>
-        Start!
-        </button>
+
+        <div className="login-card">
+            <p>Ready to launch the music?</p>
+            <button className="spotify-btn" onClick={login}>🚀 Launch!</button>
+        </div>
+
     );
 };
 

@@ -11,3 +11,82 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.space-app {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0b1d3a, #000);
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  overflow: hidden;
+}
+
+.login-card {
+  margin: 80px auto;
+  padding: 30px;
+  width: 300px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 0 30px #00ffcc;
+  text-align: center;
+}
+
+.spotify-btn {
+  font-size: 1.2rem;
+  padding: 12px 20px;
+  background: linear-gradient(45deg, #1db954, #1ed760);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.spotify-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px #1db954;
+}
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Small stars (lots of them) */
+.stars-small {
+  background-image:
+          radial-gradient(1px 1px at 10% 20%, white, transparent),
+          radial-gradient(1px 1px at 30% 80%, white, transparent),
+          radial-gradient(1px 1px at 70% 40%, white, transparent),
+          radial-gradient(1px 1px at 90% 60%, white, transparent);
+  background-size: 200px 200px;
+  opacity: 0.6;
+  animation: drift 120s linear infinite;
+}
+
+/* Medium stars */
+.stars-medium {
+  background-image:
+          radial-gradient(2px 2px at 20% 30%, #ccf, transparent),
+          radial-gradient(2px 2px at 60% 70%, #eef, transparent);
+  background-size: 300px 300px;
+  opacity: 0.7;
+  animation: drift 90s linear infinite reverse;
+}
+
+/* Big glowing stars */
+.stars-big {
+  background-image:
+          radial-gradient(3px 3px at 40% 50%, #fff, transparent),
+          radial-gradient(3px 3px at 80% 20%, #aaf, transparent);
+  background-size: 500px 500px;
+  opacity: 0.9;
+  animation: drift 60s linear infinite;
+}
+
+@keyframes drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(1000px);
+  }
+}

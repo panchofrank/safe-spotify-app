@@ -22,6 +22,7 @@ const App: React.FC = () => {
     const [currentTrack, setCurrentTrack] = useState<any>(null);
     const [playlists, setPlaylists] = useState<any[]>([]);
     const [likedSongs, setLikedSongs] = useState<any[]>([]);
+    const [recommendations, setRecommendations] = useState<any[]>([]);
 
 
   /*  useEffect(() => {
@@ -166,6 +167,32 @@ const App: React.FC = () => {
         // res.data.items is an array of { added_at, track }
         const likedTracks = res.data.items.map((item: any) => item.track);
         setLikedSongs(likedTracks);
+       // loadRecommendations(likedTracks);
+    };
+
+    const loadRecommendations = async(seedTracks: Array<any>)=> {
+        const seedIds = seedTracks
+            .slice(1, 2)
+            .map(track => track.uri.split(":")[2]);
+
+        const recs = await axios.get(
+            `https://api.spotify.com/v1/recommendations?seed_tracks=${seedIds.join(",")}&limit=20`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const recommendedUris = recs.data.items.map((t: any )=> t.uri);
+
+        const allTracks = [...seedTracks, ...recommendedUris];
+
+        function shuffle(array: string[]) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        const shuffledUris = shuffle(allTracks);
+
+
+
+        setRecommendations(shuffledUris);
     };
 
     const loadPlaylists = async () => {
@@ -183,8 +210,15 @@ const App: React.FC = () => {
     }
 
     return (
-        <div style={{ padding: 20 }}>
-            <h1>Raphael's Audio Player</h1>
+        <div>
+
+            <div className="stars stars-small" />
+            <div className="stars stars-medium" />
+            <div className="stars stars-big" />
+
+
+        <div style={{ padding: 20 }} className="space-app">
+            <h1>DJ Raphael's Music Player</h1>
             <button onClick={playRecommended}>Play!</button>
 
 
@@ -235,6 +269,7 @@ const App: React.FC = () => {
                 ))}
             </ul>
 
+        </div>
         </div>
     );
 };
