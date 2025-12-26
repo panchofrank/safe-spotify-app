@@ -130,8 +130,20 @@ const App: React.FC = () => {
         );
     };
 
+    const playRecommended = async () => {
+        if (!token || !deviceId) return;
+
+        await axios.put(
+            `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
+            { uris: likedSongs.map(item => item.uri) },
+            { headers: { Authorization: `Bearer ${token}` } });
+
+    };
+
+
     const togglePlay = () => player?.togglePlay();
     const previousTrack = () => player?.previousTrack();
+    const nextTrack = () => player?.nextTrack();
 
     const restartTrack = async () => {
         if (!token || !deviceId) return;
@@ -173,10 +185,13 @@ const App: React.FC = () => {
     return (
         <div style={{ padding: 20 }}>
             <h1>Raphael's Audio Player</h1>
+            <button onClick={playRecommended}>Play!</button>
 
 
             <CurrentTrack currentTrack={currentTrack} isPaused={isPaused}
                           restartTrack={restartTrack}
+                          previousTrack={previousTrack}
+                          nextTrack={nextTrack}
                           togglePlay={togglePlay} ></CurrentTrack>
 
 
@@ -219,21 +234,7 @@ const App: React.FC = () => {
                     </li>
                 ))}
             </ul>
-            <h2>Your Playlists</h2>
-            <ul>
-                {playlists.map((playlist) => (
-                    <li key={playlist.id} style={{ margin: 10 }}>
-                        {playlist.images && playlist.images[0] && (
-                            <img
-                                src={playlist.images[0].url}
-                                alt="playlist"
-                                width={60}
-                            />
-                        )}
-                        <span style={{ marginLeft: 10 }}>{playlist.name}</span>
-                    </li>
-                ))}
-            </ul>
+
         </div>
     );
 };
