@@ -247,10 +247,12 @@ const App: React.FC = () => {
             </ul>
 
             {/* User playlists */}
-            <h2>Your Songs</h2>
+            <h2>My Songs</h2>
             <ul>
                 {likedSongs.map((track) => (
-                    <li key={track.id} style={{ display: "flex", alignItems: "center", margin: 10 }}>
+                    <li key={track.id} style={{ display: "flex", alignItems: "center", margin: 10 }}
+                        onClick={() => playTrack(track.uri)}
+                        className="clickable">
                         {track.album.images && track.album.images[0] && (
                             <img
                                 src={track.album.images[0].url}
@@ -264,7 +266,6 @@ const App: React.FC = () => {
                             <strong>{track.name}</strong>
                             <div>{track.artists.map((a: any) => a.name).join(", ")}</div>
                         </div>
-                        <button onClick={() => playTrack(track.uri)}>▶ Play</button>
                     </li>
                 ))}
             </ul>

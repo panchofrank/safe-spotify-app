@@ -90,3 +90,10 @@ code {
     transform: translateY(1000px);
   }
 }
+li.clickable {
+  cursor: pointer;
+}
+
+li.clickable:hover {
+  color: yellow;
+}
