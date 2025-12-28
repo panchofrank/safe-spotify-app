@@ -20,24 +20,10 @@ const App: React.FC = () => {
     const [player, setPlayer] = useState<any>(null);
     const [isPaused, setIsPaused] = useState(true);
     const [currentTrack, setCurrentTrack] = useState<any>(null);
-    const [playlists, setPlaylists] = useState<any[]>([]);
     const [likedSongs, setLikedSongs] = useState<any[]>([]);
-    const [recommendations, setRecommendations] = useState<any[]>([]);
 
 
-  /*  useEffect(() => {
-        if (token) {
-            sessionStorage.setItem("spotify_token", token);
-        }
-    }, [token]);
 
-// On mount, try to restore token
-    useEffect(() => {
-        const savedToken = sessionStorage.getItem("spotify_token");
-        if (savedToken) setToken(savedToken);
-    }, []);
-
-   */
     // Exchange authorization code for token
     useEffect(() => {
         const code = new URLSearchParams(window.location.search).get("code");
@@ -95,10 +81,6 @@ const App: React.FC = () => {
         };
     }, [token]);
 
-
-    useEffect(() => {
-        if (token) loadPlaylists();
-    }, [token]);
 
 
     useEffect(() => {
@@ -170,40 +152,6 @@ const App: React.FC = () => {
        // loadRecommendations(likedTracks);
     };
 
-    const loadRecommendations = async(seedTracks: Array<any>)=> {
-        const seedIds = seedTracks
-            .slice(1, 2)
-            .map(track => track.uri.split(":")[2]);
-
-        const recs = await axios.get(
-            `https://api.spotify.com/v1/recommendations?seed_tracks=${seedIds.join(",")}&limit=20`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        const recommendedUris = recs.data.items.map((t: any )=> t.uri);
-
-        const allTracks = [...seedTracks, ...recommendedUris];
-
-        function shuffle(array: string[]) {
-            return array.sort(() => Math.random() - 0.5);
-        }
-
-        const shuffledUris = shuffle(allTracks);
-
-
-
-        setRecommendations(shuffledUris);
-    };
-
-    const loadPlaylists = async () => {
-        if (!token) return;
-
-        const res = await axios.get("https://api.spotify.com/v1/me/playlists", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setPlaylists(res.data.items);
-    };
 
     if (!token) {
         return <Login></Login>;
@@ -219,7 +167,7 @@ const App: React.FC = () => {
 
         <div style={{ padding: 20 }} className="space-app">
             <h1>DJ Raphael's Music Player</h1>
-            <button onClick={playRecommended}>Play!</button>
+            <button onClick={playRecommended}>Play my favourite songs!</button>
 
 
             <CurrentTrack currentTrack={currentTrack} isPaused={isPaused}
@@ -239,9 +187,8 @@ const App: React.FC = () => {
 
             <ul>
                 {tracks.map((track) => (
-                    <li key={track.id} style={{ margin: 10 }}>
+                    <li key={track.id} style={{ margin: 10 }} onClick={() => playTrack(track.uri)} className="clickable">
                         {track.name} – {track.artists.map((a: any) => a.name).join(", ")}
-                        <button style={{ marginLeft: 10 }} onClick={() => playTrack(track.uri)}>Play</button>
                     </li>
                 ))}
             </ul>
