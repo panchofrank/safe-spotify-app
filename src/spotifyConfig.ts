@@ -9,4 +9,5 @@ export const SCOPES = [
     "playlist-read-private",
     "playlist-read-collaborative",
     "user-library-read",
+    "user-library-modify"
 ];

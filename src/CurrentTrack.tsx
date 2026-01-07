@@ -7,11 +7,12 @@ type CurrentTrackProps = {
     previousTrack: () => void;
     nextTrack: () => void;
     togglePlay: () => void;
+    likeTrack: () => void;
 };
 
 
 const CurrentTrack: React.FC<CurrentTrackProps> = ({ currentTrack, isPaused, restartTrack,
-                                                       previousTrack, nextTrack, togglePlay }) => {
+                                                       previousTrack, nextTrack, togglePlay, likeTrack }) => {
 
 
     return (
@@ -32,6 +33,7 @@ const CurrentTrack: React.FC<CurrentTrackProps> = ({ currentTrack, isPaused, res
             <button onClick={togglePlay}>{isPaused ? "▶ Play" : "⏸ Pause"}</button>
             <button onClick={previousTrack}>⏪ Previous</button>
             <button onClick={nextTrack}>⏩ Next</button>
+            <button onClick={likeTrack}>Like</button>
         </div>
     </div>)
     );
