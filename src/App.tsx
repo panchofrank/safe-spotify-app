@@ -144,14 +144,27 @@ const App: React.FC = () => {
             { headers: { Authorization: `Bearer ${state.token}` } }
         );
     };
+    function shuffle<T>(array: T[]): T[] {
+      const result = [...array];
 
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+
+        return result;
+    }
     const playRecommended = async () => {
         if (!state.token || !state.deviceId) return;
 
-        await axios.put(
-            `https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`,
-            { uris: state.likedSongs.map(item => item.uri) },
-            { headers: { Authorization: `Bearer ${state.token}` } });
+
+
+            const shuffledUris = shuffle(state.likedSongs).map(item => item.uri);
+
+             await axios.put(
+             `https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`,
+              { uris: shuffledUris },
+              { headers: { Authorization: `Bearer ${state.token}` } });
 
     };
 
