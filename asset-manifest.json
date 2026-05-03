@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/safe-spotify-app/static/css/main.a014f4bc.css",
-    "main.js": "/safe-spotify-app/static/js/main.f6a2bd1a.js",
+    "main.js": "/safe-spotify-app/static/js/main.13d4bc6a.js",
     "static/js/453.a397f641.chunk.js": "/safe-spotify-app/static/js/453.a397f641.chunk.js",
     "index.html": "/safe-spotify-app/index.html",
     "main.a014f4bc.css.map": "/safe-spotify-app/static/css/main.a014f4bc.css.map",
-    "main.f6a2bd1a.js.map": "/safe-spotify-app/static/js/main.f6a2bd1a.js.map",
+    "main.13d4bc6a.js.map": "/safe-spotify-app/static/js/main.13d4bc6a.js.map",
     "453.a397f641.chunk.js.map": "/safe-spotify-app/static/js/453.a397f641.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.a014f4bc.css",
-    "static/js/main.f6a2bd1a.js"
+    "static/js/main.13d4bc6a.js"
   ]
 }
