@@ -1,6 +1,63 @@
 # Spotify kid safe app
 Allows use of spotify on a web page without access to video functionality.
 
+## Environment variables (`.env`)
+
+The app reads its config from a `.env` file in the project root (not committed). It must define:
+
+| Variable | Purpose |
+| --- | --- |
+| `REACT_APP_SPOTIFY_CLIENT_ID` | Spotify app client ID (from the Spotify dashboard). |
+| `REACT_APP_REDIRECT_URL` | The OAuth redirect URI Spotify sends you back to after login. **This changes between local dev and production — see below.** |
+| `REACT_APP_LASTFM_API_KEY` | Last.fm API key, used to fetch "similar track" suggestions. |
+
+> **Important:** Create React App only reads `.env` at startup. After editing it you **must stop and restart `npm start`** — a running dev server keeps the old values.
+
+### `REACT_APP_REDIRECT_URL`: local vs production
+
+Spotify only redirects to an **exact**, **https** URL that is registered in your
+[Spotify app dashboard](https://developer.spotify.com/dashboard) (App → Settings → Redirect URIs).
+So this value differs depending on where you're running:
+
+- **Production** (deployed to GitHub Pages):
+  `https://panchofrank.github.io/safe-spotify-app/`
+- **Local development**: an https tunnel pointing at `localhost:3000` (Spotify won't accept a plain
+  `http://localhost` redirect). See "Local development" below.
+
+When you switch contexts, change `REACT_APP_REDIRECT_URL` in `.env`, make sure that **same** URL is
+listed in the Spotify dashboard, and restart `npm start`. If the value in `.env` doesn't exactly match
+a URI registered in the dashboard, login fails with `INVALID_CLIENT: Invalid redirect URI`.
+
+## Local development
+
+Spotify requires the OAuth redirect to be an https URL, but `npm start` serves plain http on
+`localhost:3000`. To bridge that, run a tunnel that exposes `localhost:3000` over https and use the
+tunnel's URL as `REACT_APP_REDIRECT_URL`.
+
+We use **cloudflared** (Cloudflare Tunnel). It serves the app directly with no warning/interstitial
+page. (We previously used ngrok, but ngrok's free tier injects a browser-warning interstitial —
+`ERR_NGROK_6024` — that broke the OAuth redirect, so it's no longer used.)
+
+1. Install cloudflared (one-time). On Linux:
+   ```bash
+   curl -fsSL -o ~/.local/bin/cloudflared \
+     https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+   chmod +x ~/.local/bin/cloudflared
+   ```
+2. Start the tunnel (leave it running):
+   ```bash
+   cloudflared tunnel --url http://localhost:3000
+   ```
+   It prints a random URL like `https://<random-words>.trycloudflare.com`.
+3. Put that URL in `.env` as `REACT_APP_REDIRECT_URL`, and add the **same** URL to the Spotify
+   dashboard's Redirect URIs.
+4. Start (or restart) the app: `npm start`, then open
+   [http://localhost:3000](http://localhost:3000) and press Launch.
+
+> **Heads up:** free `trycloudflare.com` URLs are random and change every time you restart
+> `cloudflared`. When that happens you must update both `.env` **and** the Spotify dashboard with the
+> new URL, then restart `npm start`.
+
 ## Available Scripts
 
 In the project directory, you can run:
@@ -9,10 +66,7 @@ In the project directory, you can run:
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-You need to run ngrok so that Spotify is configured to redirect to an https address.
-#### `ngrok http 3000`
-
+Requires a running https tunnel and matching `REACT_APP_REDIRECT_URL` — see "Local development" above.
 
 ### `npm test`
 

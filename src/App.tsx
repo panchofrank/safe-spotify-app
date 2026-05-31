@@ -1,7 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import { REDIRECT_URI, SPOTIFY_CLIENT_ID } from "./spotifyConfig";
+import {
+    getLikedSongs,
+    playUris,
+    saveTrack,
+    searchTracks,
+    seekToStart,
+} from "./api/spotify";
+import { fetchSuggestions } from "./api/suggestions";
+import { mixSongs } from "./utils/mixSongs";
+import { shuffle } from "./utils/shuffle";
+import { Track } from "./types";
 import Login from "./Login";
 import CurrentTrack from "./CurrentTrack";
 
@@ -12,34 +23,23 @@ declare global {
     }
 }
 
-type MusicPlayerState = {
-    token: string | null;
-    tracks: any[];
-    searchTerm: string;
-    deviceId: string | null;
-    player: any;
-    isPaused: boolean;
-    currentTrack: any;
-    likedSongs: any[];
-    offset: number;
-}
+const PAGE_SIZE = 50;
 
 const App: React.FC = () => {
+    const [token, setToken] = useState<string | null>(null);
+    const [deviceId, setDeviceId] = useState<string | null>(null);
+    const [player, setPlayer] = useState<any>(null);
+    const [isPaused, setIsPaused] = useState(true);
+    const [currentTrack, setCurrentTrack] = useState<any>(null);
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const [tracks, setTracks] = useState<Track[]>([]);
 
-    const [state, setState] = useState<MusicPlayerState>({
-        token: null,
-        tracks: [],
-        searchTerm: "",
-        deviceId: null,
-        player: null,
-        isPaused: true,
-        currentTrack: null,
-        likedSongs: [],
-        offset: 0
-    });
+    const [likedSongs, setLikedSongs] = useState<Track[]>([]);
+    const [suggestedSongs, setSuggestedSongs] = useState<Track[]>([]);
+    const [offset, setOffset] = useState(0);
 
-    // Exchange authorization code for token
+    // Exchange the authorization code for an access token on return from Spotify.
     useEffect(() => {
         const code = new URLSearchParams(window.location.search).get("code");
         const codeVerifier = sessionStorage.getItem("code_verifier");
@@ -57,7 +57,7 @@ const App: React.FC = () => {
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
             })
             .then((res) => {
-                setState(prev => ({ ...prev, token: res.data.access_token }));
+                setToken(res.data.access_token);
                 sessionStorage.removeItem("code_verifier");
                 window.history.replaceState({}, document.title, "/");
             })
@@ -65,9 +65,10 @@ const App: React.FC = () => {
                 console.error("Token error:", err.response?.data || err);
             });
     }, []);
-    // Initialize Web Playback SDK
+
+    // Initialize the Web Playback SDK once we have a token.
     useEffect(() => {
-        if (!state.token) return;
+        if (!token) return;
 
         const script = document.createElement("script");
         script.src = "https://sdk.scdn.co/spotify-player.js";
@@ -75,206 +76,159 @@ const App: React.FC = () => {
         document.body.appendChild(script);
 
         window.onSpotifyWebPlaybackSDKReady = () => {
-            if (!state.token) return;
-            const player = new window.Spotify.Player({
+            const sdkPlayer = new window.Spotify.Player({
                 name: "React Web Player",
-                getOAuthToken: (cb: (token: string) => void) => cb(state.token || ''),
+                getOAuthToken: (cb: (t: string) => void) => cb(token),
                 volume: 0.5,
             });
 
-
-            player.addListener("ready", ({device_id}: any) => {
-                setState(prev => ({...prev, deviceId: device_id}));
+            sdkPlayer.addListener("ready", ({ device_id }: any) => setDeviceId(device_id));
+            sdkPlayer.addListener("player_state_changed", (sdkState: any) => {
+                if (!sdkState) return;
+                setIsPaused(sdkState.paused);
+                setCurrentTrack(sdkState.track_window.current_track);
             });
 
-            player.addListener("player_state_changed", (state: any) => {
-                if (!state) return;
-                setState(prev => ({
-                    ...prev,
-                    isPaused: state.paused,
-                    currentTrack: state.track_window.current_track
-                }));
+            sdkPlayer.connect();
+            setPlayer(sdkPlayer);
+        };
 
-            });
+        return () => {
+            script.remove();
+        };
+    }, [token]);
 
-            player.connect();
-            setState(prev => ({...prev, player: player}));
+    // Load liked songs (and their suggestions) on login and whenever the page changes.
+    const refreshLibrary = useCallback(async () => {
+        if (!token) return;
+        try {
+            const liked = await getLikedSongs(token, offset, PAGE_SIZE);
+            setLikedSongs(liked);
+            setSuggestedSongs([]);
+            setSuggestedSongs(await fetchSuggestions(token, liked));
+        } catch (err) {
+            console.error("Failed to load library:", err);
         }
-
-    }, [state.token]);
-
-    useEffect(() => {
-        loadLikedSongs();
-    }, [state.offset]);
+    }, [token, offset]);
 
     useEffect(() => {
-        if (state.token) loadLikedSongs();
-    }, [state.token]);
+        refreshLibrary();
+    }, [refreshLibrary]);
 
-
-    const searchTracks = async () => {
-        if (!state.token) return;
-
-        const res = await axios.get("https://api.spotify.com/v1/search", {
-            headers: { Authorization: `Bearer ${state.token}` },
-            params: {
-                q: state.searchTerm,
-                type: "track",
-                limit: 10,
-            },
-        });
-        setState(prev => ({...prev, tracks: res.data.tracks.items}));
-
+    const handleSearch = async () => {
+        if (!token || !searchTerm) return;
+        setTracks(await searchTracks(token, searchTerm));
     };
 
-    const likeTrack = async ()=> {
-        await axios.put(
-            `https://api.spotify.com/v1/me/tracks?device_id=${state.deviceId}`,
-            { ids: [state.currentTrack.id] },
-            { headers: { Authorization: `Bearer ${state.token}` } }
-        );
-    } ;
-
-    const playTrack = async (uri: string) => {
-        if (!state.token || !state.deviceId) return;
-
-        await axios.put(
-            `https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`,
-            { uris: [uri] },
-            { headers: { Authorization: `Bearer ${state.token}` } }
-        );
-    };
-    function shuffle<T>(array: T[]): T[] {
-      const result = [...array];
-
-      for (let i = result.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [result[i], result[j]] = [result[j], result[i]];
-      }
-
-        return result;
-    }
-    const playRecommended = async () => {
-        if (!state.token || !state.deviceId) return;
-
-
-
-            const shuffledUris = shuffle(state.likedSongs).map(item => item.uri);
-
-             await axios.put(
-             `https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`,
-              { uris: shuffledUris },
-              { headers: { Authorization: `Bearer ${state.token}` } });
-
+    const likeCurrentTrack = async () => {
+        if (token && currentTrack) await saveTrack(token, currentTrack.id);
     };
 
+    const play = async (uri: string) => {
+        if (token && deviceId) await playUris(token, deviceId, [uri]);
+    };
 
-    const togglePlay = () => state.player?.togglePlay();
-    const previousTrack = () => state.player?.previousTrack();
-    const nextTrack = () => state.player?.nextTrack();
+    const playFavourites = async () => {
+        if (!token || !deviceId) return;
+        const uris = shuffle([...likedSongs, ...suggestedSongs]).map((t) => t.uri);
+        await playUris(token, deviceId, uris);
+    };
 
     const restartTrack = async () => {
-        if (!state.token || !state.deviceId) return;
-
-        await axios.put(
-            `https://api.spotify.com/v1/me/player/seek?position_ms=0&device_id=${state.deviceId}`,
-            {},
-            { headers: { Authorization: `Bearer ${state.token}` } }
-        );
+        if (token && deviceId) await seekToStart(token, deviceId);
     };
 
-    function pageDown() {
-        setState(prev => ({ ...prev, offset: state.offset + 50 }));
-    }
+    const togglePlay = () => player?.togglePlay();
+    const previousTrack = () => player?.previousTrack();
+    const nextTrack = () => player?.nextTrack();
 
-    function pageUp() {
-        setState(prev => ({ ...prev, offset: Math.max(state.offset - 50, 0) }));
-    }
+    const pageDown = () => setOffset((prev) => prev + PAGE_SIZE);
+    const pageUp = () => setOffset((prev) => Math.max(prev - PAGE_SIZE, 0));
 
-    const loadLikedSongs = async () => {
-        if (!state.token) return;
+    const mixedSongs = useMemo(
+        () => mixSongs(likedSongs, suggestedSongs),
+        [likedSongs, suggestedSongs]
+    );
 
-        const res = await axios.get("https://api.spotify.com/v1/me/tracks", {
-            headers: { Authorization: `Bearer ${state.token}` },
-            params: { limit: 50, offset:state.offset }, // adjust as needed
-        });
-
-        // res.data.items is an array of { added_at, track }
-        const likedTracks = res.data.items.map((item: any) => item.track);
-
-        setState(prev => ({ ...prev, likedSongs: likedTracks }));
-       // loadRecommendations(likedTracks);
-    };
-
-
-    if (!state.token) {
-        return <Login></Login>;
+    if (!token) {
+        return <Login />;
     }
 
     return (
         <div>
-
             <div className="stars stars-small" />
             <div className="stars stars-medium" />
             <div className="stars stars-big" />
 
+            <div style={{ padding: 20 }} className="space-app">
+                <h1>DJ Raphy's Music Player</h1>
+                <button onClick={playFavourites}>Play my favourite songs!</button>
 
-        <div style={{ padding: 20 }} className="space-app">
-            <h1>DJ Raphy's Music Player</h1>
-            <button onClick={playRecommended}>Play my favourite songs!</button>
+                <CurrentTrack
+                    currentTrack={currentTrack}
+                    isPaused={isPaused}
+                    restartTrack={restartTrack}
+                    previousTrack={previousTrack}
+                    nextTrack={nextTrack}
+                    togglePlay={togglePlay}
+                    likeTrack={likeCurrentTrack}
+                />
 
+                {/* Track search */}
+                <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search tracks..."
+                />
+                <button onClick={handleSearch}>Search</button>
 
-            <CurrentTrack currentTrack={state.currentTrack} isPaused={state.isPaused}
-                          restartTrack={restartTrack}
-                          previousTrack={previousTrack}
-                          nextTrack={nextTrack}
-                          togglePlay={togglePlay}
-                          likeTrack={likeTrack}  ></CurrentTrack>
+                <ul>
+                    {tracks.map((track) => (
+                        <li
+                            key={track.id}
+                            style={{ margin: 10 }}
+                            onClick={() => play(track.uri)}
+                            className="clickable"
+                        >
+                            {track.name} – {track.artists.map((a) => a.name).join(", ")}
+                        </li>
+                    ))}
+                </ul>
 
-
-            {/* Track search */}
-            <input
-                value={state.searchTerm}
-                onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-                placeholder="Search tracks..."
-            />
-            <button onClick={searchTracks}>Search</button>
-
-            <ul>
-                {state.tracks.map((track) => (
-                    <li key={track.id} style={{ margin: 10 }} onClick={() => playTrack(track.uri)} className="clickable">
-                        {track.name} – {track.artists.map((a: any) => a.name).join(", ")}
-                    </li>
-                ))}
-            </ul>
-
-            {/* User playlists */}
-            <h2>My Songs</h2>
-            <ul>
-                {state.likedSongs.map((track) => (
-                    <li key={track.id} style={{ display: "flex", alignItems: "center", margin: 10 }}
-                        onClick={() => playTrack(track.uri)}
-                        className="clickable">
-                        {track.album.images && track.album.images[0] && (
-                            <img
-                                src={track.album.images[0].url}
-                                alt="album"
-                                width={60}
-                                height={60}
-                                style={{ marginRight: 10 }}
-                            />
-                        )}
-                        <div style={{ flex: 1 }}>
-                            <strong>{track.name}</strong>
-                            <div>{track.artists.map((a: any) => a.name).join(", ")}</div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-            <button onClick={() => pageDown() }>Page Down</button>
-            <button onClick={() => pageUp() }>Page Up</button>
-
-        </div>
+                {/* Liked songs, with Last.fm suggestions mixed in */}
+                <h2>My Songs</h2>
+                <ul>
+                    {mixedSongs.map((track) => (
+                        <li
+                            key={track.id}
+                            style={{ display: "flex", alignItems: "center", margin: 10 }}
+                            onClick={() => play(track.uri)}
+                            className="clickable"
+                        >
+                            {track.album.images?.[0] && (
+                                <img
+                                    src={track.album.images[0].url}
+                                    alt="album"
+                                    width={60}
+                                    height={60}
+                                    style={{ marginRight: 10 }}
+                                />
+                            )}
+                            <div style={{ flex: 1 }}>
+                                <strong>{track.name}</strong>
+                                {track.__suggested && (
+                                    <span style={{ marginLeft: 8, fontSize: 12, color: "#1db954" }}>
+                                        ✨ Suggested
+                                    </span>
+                                )}
+                                <div>{track.artists.map((a) => a.name).join(", ")}</div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+                <button onClick={pageDown}>Page Down</button>
+                <button onClick={pageUp}>Page Up</button>
+            </div>
         </div>
     );
 };
