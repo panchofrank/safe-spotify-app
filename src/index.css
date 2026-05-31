@@ -97,3 +97,98 @@ li.clickable {
 li.clickable:hover {
   color: yellow;
 }
+
+/* ---- Fun, kid-friendly buttons ---- */
+.fun-btn {
+  font-family: 'Orbitron', 'Comic Sans MS', cursive, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  padding: 12px 22px;
+  margin: 6px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.fun-btn:hover {
+  transform: translateY(-3px) scale(1.06) rotate(-1deg);
+  filter: brightness(1.12);
+}
+
+.fun-btn:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fun-btn:focus-visible {
+  outline: 4px dashed #fff36b;
+  outline-offset: 3px;
+}
+
+/* Bigger, attention-grabbing variant (Play, "keep it") */
+.fun-btn--big {
+  font-size: 1.45rem;
+  padding: 16px 30px;
+}
+
+/* Colour variants */
+.fun-btn--play    { background: linear-gradient(45deg, #1db954, #1ed760); }
+.fun-btn--keep    { background: linear-gradient(45deg, #1db954, #36ff8b); }
+.fun-btn--nav     { background: linear-gradient(45deg, #3a7bff, #00d4ff); }
+.fun-btn--like    { background: linear-gradient(45deg, #ff5fa2, #ff9ad1); }
+.fun-btn--restart { background: linear-gradient(45deg, #8a5cff, #c08bff); }
+.fun-btn--unlike  { background: linear-gradient(45deg, #ff8a3d, #ffc04d); }
+
+/* The destructive choice is deliberately smaller & calmer than "keep it" */
+.fun-btn--danger {
+  background: linear-gradient(45deg, #c23b3b, #e06a6a);
+  font-size: 0.95rem;
+  padding: 9px 16px;
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* The big happy Play button gently pulses to invite a tap */
+.fun-btn--play.fun-btn--big {
+  animation: fun-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes fun-pulse {
+  0%, 100% { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.35); }
+  50%      { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 0 22px #1ed760; }
+}
+
+/* Confirmation panel for removing a favourite */
+.confirm-box {
+  margin: 16px auto;
+  padding: 18px 22px;
+  max-width: 440px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px dashed #ffc04d;
+  border-radius: 20px;
+  box-shadow: 0 0 24px rgba(255, 192, 77, 0.4);
+}
+
+.confirm-text {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.like-status {
+  margin-top: 6px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fun-btn,
+  .fun-btn--play.fun-btn--big {
+    animation: none;
+    transition: none;
+  }
+}

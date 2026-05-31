@@ -3,8 +3,10 @@ import axios from "axios";
 
 import { REDIRECT_URI, SPOTIFY_CLIENT_ID } from "./spotifyConfig";
 import {
+    checkSavedTracks,
     getLikedSongs,
     playUris,
+    removeTrack,
     saveTrack,
     searchTracks,
     seekToStart,
@@ -31,6 +33,7 @@ const App: React.FC = () => {
     const [player, setPlayer] = useState<any>(null);
     const [isPaused, setIsPaused] = useState(true);
     const [currentTrack, setCurrentTrack] = useState<any>(null);
+    const [isCurrentLiked, setIsCurrentLiked] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [tracks, setTracks] = useState<Track[]>([]);
@@ -120,8 +123,35 @@ const App: React.FC = () => {
         setTracks(await searchTracks(token, searchTerm));
     };
 
+    // Track whether the currently playing song is in the user's library. The
+    // playing track may not be on the current liked-songs page, so ask Spotify.
+    useEffect(() => {
+        if (!token || !currentTrack?.id) {
+            setIsCurrentLiked(false);
+            return;
+        }
+        let cancelled = false;
+        checkSavedTracks(token, [currentTrack.id])
+            .then(([saved]) => {
+                if (!cancelled) setIsCurrentLiked(!!saved);
+            })
+            .catch((err) => console.error("Failed to check liked status:", err));
+        return () => {
+            cancelled = true;
+        };
+    }, [token, currentTrack?.id]);
+
     const likeCurrentTrack = async () => {
-        if (token && currentTrack) await saveTrack(token, currentTrack.id);
+        if (!token || !currentTrack) return;
+        await saveTrack(token, currentTrack.id);
+        setIsCurrentLiked(true);
+    };
+
+    const unlikeCurrentTrack = async () => {
+        if (!token || !currentTrack) return;
+        await removeTrack(token, currentTrack.id);
+        setIsCurrentLiked(false);
+        setLikedSongs((prev) => prev.filter((t) => t.id !== currentTrack.id));
     };
 
     const play = async (uri: string) => {
@@ -162,7 +192,9 @@ const App: React.FC = () => {
 
             <div style={{ padding: 20 }} className="space-app">
                 <h1>DJ Raphy's Music Player</h1>
-                <button onClick={playFavourites}>Play my favourite songs!</button>
+                <button className="fun-btn fun-btn--play fun-btn--big" onClick={playFavourites}>
+                    🎉 Play my favourite songs!
+                </button>
 
                 <CurrentTrack
                     currentTrack={currentTrack}
@@ -171,7 +203,9 @@ const App: React.FC = () => {
                     previousTrack={previousTrack}
                     nextTrack={nextTrack}
                     togglePlay={togglePlay}
+                    isLiked={isCurrentLiked}
                     likeTrack={likeCurrentTrack}
+                    unlikeTrack={unlikeCurrentTrack}
                 />
 
                 {/* Track search */}
@@ -180,7 +214,7 @@ const App: React.FC = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search tracks..."
                 />
-                <button onClick={handleSearch}>Search</button>
+                <button className="fun-btn fun-btn--nav" onClick={handleSearch}>🔍 Search</button>
 
                 <ul>
                     {tracks.map((track) => (
@@ -226,8 +260,8 @@ const App: React.FC = () => {
                         </li>
                     ))}
                 </ul>
-                <button onClick={pageDown}>Page Down</button>
-                <button onClick={pageUp}>Page Up</button>
+                <button className="fun-btn fun-btn--nav" onClick={pageDown}>⬇️ More songs</button>
+                <button className="fun-btn fun-btn--nav" onClick={pageUp}>⬆️ Go back</button>
             </div>
         </div>
     );

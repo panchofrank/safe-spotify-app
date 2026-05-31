@@ -32,6 +32,20 @@ export async function saveTrack(token: string, trackId: string): Promise<void> {
     await axios.put(`${API_BASE}/me/tracks`, { ids: [trackId] }, auth(token));
 }
 
+/** Remove a track from the user's library ("unlike"). */
+export async function removeTrack(token: string, trackId: string): Promise<void> {
+    await axios.delete(`${API_BASE}/me/tracks`, { ...auth(token), data: { ids: [trackId] } });
+}
+
+/** Check whether tracks are saved in the user's library. Returns one boolean per id. */
+export async function checkSavedTracks(token: string, ids: string[]): Promise<boolean[]> {
+    const res = await axios.get(`${API_BASE}/me/tracks/contains`, {
+        ...auth(token),
+        params: { ids: ids.join(",") },
+    });
+    return res.data;
+}
+
 /** Start playback of the given track URIs on the target device. */
 export async function playUris(token: string, deviceId: string, uris: string[]): Promise<void> {
     await axios.put(
