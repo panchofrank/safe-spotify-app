@@ -186,14 +186,14 @@ const App: React.FC = () => {
 
     return (
         <div>
-            <div className="stars stars-small" />
-            <div className="stars stars-medium" />
-            <div className="stars stars-big" />
+            <div className="sea sea-clouds" />
+            <div className="sea sea-clouds-far" />
+            <div className="sea sea-bubbles" />
 
-            <div style={{ padding: 20 }} className="space-app">
-                <h1>DJ Raphy's Music Player</h1>
+            <div style={{ padding: 20 }} className="ocean-app">
+                <h1>🏴‍☠️ DJ Raphy's Grand Line Jukebox</h1>
                 <button className="fun-btn fun-btn--play fun-btn--big" onClick={playFavourites}>
-                    🎉 Play my favourite songs!
+                    🏴‍☠️ Play my treasure songs!
                 </button>
 
                 <CurrentTrack
@@ -212,7 +212,7 @@ const App: React.FC = () => {
                 <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search tracks..."
+                    placeholder="Search for treasure songs..."
                 />
                 <button className="fun-btn fun-btn--nav" onClick={handleSearch}>🔍 Search</button>
 
@@ -230,7 +230,7 @@ const App: React.FC = () => {
                 </ul>
 
                 {/* Liked songs, with Last.fm suggestions mixed in */}
-                <h2>My Songs</h2>
+                <h2>🗺️ My Treasure Songs</h2>
                 <ul>
                     {mixedSongs.map((track) => (
                         <li
@@ -251,8 +251,8 @@ const App: React.FC = () => {
                             <div style={{ flex: 1 }}>
                                 <strong>{track.name}</strong>
                                 {track.__suggested && (
-                                    <span style={{ marginLeft: 8, fontSize: 12, color: "#1db954" }}>
-                                        ✨ Suggested
+                                    <span style={{ marginLeft: 8, fontSize: 12, color: "#ffd34d" }}>
+                                        🧭 New treasure
                                     </span>
                                 )}
                                 <div>{track.artists.map((a) => a.name).join(", ")}</div>

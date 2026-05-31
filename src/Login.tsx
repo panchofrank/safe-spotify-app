@@ -18,8 +18,8 @@ const Login = () => {
     return (
 
         <div className="login-card">
-            <p>Ready to launch the music?</p>
-            <button className="spotify-btn" onClick={login}>🚀 Launch!</button>
+            <p>Ready to set sail? 🏴‍☠️</p>
+            <button className="spotify-btn" onClick={login}>⚓ Set sail!</button>
         </div>
 
     );

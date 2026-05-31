@@ -12,29 +12,76 @@ code {
     monospace;
 }
 
-.space-app {
+/* ---- One Piece: Grand Line ocean theme ---- */
+.ocean-app {
   min-height: 100vh;
-  background: radial-gradient(circle at top, #0b1d3a, #000);
-  color: white;
-  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(to bottom, #b6ecff 0%, #5cc6ff 30%, #1f86c9 58%, #0a3d62 100%);
+  color: #fff;
+  font-family: 'Baloo 2', 'Comic Sans MS', cursive, sans-serif;
   overflow: hidden;
+}
+
+.ocean-app h1 {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 3rem;
+  color: #ffd34d;
+  text-shadow: 3px 3px 0 #8a3b00, 0 0 18px rgba(0, 0, 0, 0.35);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.ocean-app h2 {
+  font-family: 'Pirata One', 'Baloo 2', cursive;
+  font-size: 2rem;
+  color: #fff;
+  text-shadow: 2px 2px 0 #0a3d62;
+}
+
+/* Gentle rolling waves along the bottom of the sea */
+.ocean-app::after {
+  content: "";
+  position: fixed;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 90px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 40px 70px, #062c48 40px, transparent 42px) repeat-x;
+  background-size: 90px 90px;
+  opacity: 0.4;
+  animation: wave-bob 6s ease-in-out infinite;
 }
 
 .login-card {
   margin: 80px auto;
   padding: 30px;
   width: 300px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 61, 98, 0.7);
+  border: 3px solid #ffd34d;
   border-radius: 16px;
-  box-shadow: 0 0 30px #00ffcc;
+  box-shadow: 0 0 30px #ffd34d;
   text-align: center;
+  color: #fff;
+  font-family: 'Baloo 2', cursive;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card p {
+  font-family: 'Pirata One', cursive;
+  font-size: 1.6rem;
+  color: #ffd34d;
 }
 
 .spotify-btn {
-  font-size: 1.2rem;
-  padding: 12px 20px;
-  background: linear-gradient(45deg, #1db954, #1ed760);
-  border: none;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  font-size: 1.3rem;
+  padding: 14px 24px;
+  color: #fff;
+  background: linear-gradient(45deg, #d7263d, #ff5e3a);
+  border: 3px solid #ffd34d;
   border-radius: 999px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -42,53 +89,64 @@ code {
 
 .spotify-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 20px #1db954;
+  box-shadow: 0 0 20px #ffd34d;
 }
-.stars {
+
+/* Animated sky & sea layers (drift over the scene like stars used to) */
+.sea {
   position: fixed;
   inset: 0;
   pointer-events: none;
 }
 
-/* Small stars (lots of them) */
-.stars-small {
+/* Fluffy clouds drifting across the sky */
+.sea-clouds {
   background-image:
-          radial-gradient(1px 1px at 10% 20%, white, transparent),
-          radial-gradient(1px 1px at 30% 80%, white, transparent),
-          radial-gradient(1px 1px at 70% 40%, white, transparent),
-          radial-gradient(1px 1px at 90% 60%, white, transparent);
-  background-size: 200px 200px;
-  opacity: 0.6;
-  animation: drift 120s linear infinite;
-}
-
-/* Medium stars */
-.stars-medium {
-  background-image:
-          radial-gradient(2px 2px at 20% 30%, #ccf, transparent),
-          radial-gradient(2px 2px at 60% 70%, #eef, transparent);
-  background-size: 300px 300px;
-  opacity: 0.7;
-  animation: drift 90s linear infinite reverse;
-}
-
-/* Big glowing stars */
-.stars-big {
-  background-image:
-          radial-gradient(3px 3px at 40% 50%, #fff, transparent),
-          radial-gradient(3px 3px at 80% 20%, #aaf, transparent);
-  background-size: 500px 500px;
+          radial-gradient(60px 24px at 15% 16%, rgba(255, 255, 255, 0.95), transparent),
+          radial-gradient(90px 32px at 55% 10%, rgba(255, 255, 255, 0.85), transparent),
+          radial-gradient(70px 26px at 85% 20%, rgba(255, 255, 255, 0.9), transparent);
+  background-repeat: repeat-x;
+  background-size: 900px 100%;
   opacity: 0.9;
-  animation: drift 60s linear infinite;
+  animation: cloud-drift 80s linear infinite;
 }
 
-@keyframes drift {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(1000px);
-  }
+/* Smaller, slower clouds farther away */
+.sea-clouds-far {
+  background-image:
+          radial-gradient(40px 16px at 30% 28%, rgba(255, 255, 255, 0.7), transparent),
+          radial-gradient(55px 20px at 75% 34%, rgba(255, 255, 255, 0.6), transparent);
+  background-repeat: repeat-x;
+  background-size: 700px 100%;
+  opacity: 0.7;
+  animation: cloud-drift 140s linear infinite reverse;
+}
+
+/* Bubbles rising up from the deep */
+.sea-bubbles {
+  background-image:
+          radial-gradient(4px 4px at 20% 90%, rgba(255, 255, 255, 0.8), transparent),
+          radial-gradient(6px 6px at 45% 95%, rgba(255, 255, 255, 0.6), transparent),
+          radial-gradient(3px 3px at 70% 92%, rgba(255, 255, 255, 0.7), transparent),
+          radial-gradient(5px 5px at 88% 97%, rgba(255, 255, 255, 0.55), transparent);
+  background-size: 320px 600px;
+  opacity: 0.7;
+  animation: bubble-rise 16s linear infinite;
+}
+
+@keyframes cloud-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 900px 0; }
+}
+
+@keyframes bubble-rise {
+  from { background-position: 0 0; }
+  to   { background-position: 0 -600px; }
+}
+
+@keyframes wave-bob {
+  0%, 100% { transform: translateY(8px); }
+  50%      { transform: translateY(-8px); }
 }
 li.clickable {
   cursor: pointer;
@@ -100,7 +158,7 @@ li.clickable:hover {
 
 /* ---- Fun, kid-friendly buttons ---- */
 .fun-btn {
-  font-family: 'Orbitron', 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Baloo 2', 'Comic Sans MS', cursive, sans-serif;
   font-size: 1.1rem;
   font-weight: 800;
   color: #fff;
@@ -135,13 +193,13 @@ li.clickable:hover {
   padding: 16px 30px;
 }
 
-/* Colour variants */
-.fun-btn--play    { background: linear-gradient(45deg, #1db954, #1ed760); }
+/* Colour variants — One Piece palette: treasure gold, Luffy red, ocean blue */
+.fun-btn--play    { background: linear-gradient(45deg, #f4a900, #ffd34d); color: #5a2a00; text-shadow: none; }
 .fun-btn--keep    { background: linear-gradient(45deg, #1db954, #36ff8b); }
-.fun-btn--nav     { background: linear-gradient(45deg, #3a7bff, #00d4ff); }
-.fun-btn--like    { background: linear-gradient(45deg, #ff5fa2, #ff9ad1); }
-.fun-btn--restart { background: linear-gradient(45deg, #8a5cff, #c08bff); }
-.fun-btn--unlike  { background: linear-gradient(45deg, #ff8a3d, #ffc04d); }
+.fun-btn--nav     { background: linear-gradient(45deg, #0a78c4, #2fd0ff); }
+.fun-btn--like    { background: linear-gradient(45deg, #d7263d, #ff6f61); }
+.fun-btn--restart { background: linear-gradient(45deg, #00a896, #41e0c8); }
+.fun-btn--unlike  { background: linear-gradient(45deg, #b06a00, #ffb84d); }
 
 /* The destructive choice is deliberately smaller & calmer than "keep it" */
 .fun-btn--danger {
@@ -159,7 +217,7 @@ li.clickable:hover {
 
 @keyframes fun-pulse {
   0%, 100% { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.35); }
-  50%      { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 0 22px #1ed760; }
+  50%      { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 0 24px #ffd34d; }
 }
 
 /* Confirmation panel for removing a favourite */

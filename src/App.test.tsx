@@ -14,5 +14,5 @@ jest.mock('query-string', () => ({
 
 test('shows the login screen when not authenticated', () => {
   render(<App />);
-  expect(screen.getByText(/Launch!/i)).toBeInTheDocument();
+  expect(screen.getByText(/Set sail!/i)).toBeInTheDocument();
 });
