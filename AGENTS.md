@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents (e.g., Claude Code, opencode) when working with code in this repository.
 
 ## Commands
 
@@ -37,7 +37,7 @@ For local dev, use an ngrok tunnel as the redirect URI since `localhost` isn't a
 
 **Spotify calls:** All raw Spotify REST calls (search, liked songs, save, play, seek) live in `src/api/spotify.ts`; `App.tsx` imports these helpers rather than calling Axios directly.
 
-**Suggestions (Last.fm):** `src/api/suggestions.ts` builds recommendations: it samples a few liked songs as seeds, asks Last.fm `track.getsimilar` for similar tracks, then resolves each "artist + title" back to a playable track via Spotify search (dropping misses, already-liked songs, and duplicates). Last.fm is used purely as a read-only REST API with an API key — there is no Last.fm OAuth/login flow. Suggested tracks carry a `__suggested` flag (see `src/types.ts`).
+**Suggestions (Last.fm):** `src/api/suggestions.ts` builds recommendations: it samples a few liked songs as seeds, asks Last.fm `track.getsimilar` for a larger pool of similar tracks, then resolves a random subset of "artist + title" pairs back to a playable track via Spotify search (dropping misses, already-liked songs, and duplicates). All shuffling is driven by a PRNG seeded from the date (see `dailySeed`/`seededShuffle`), so suggestions are stable within a day but change every day instead of always returning Last.fm's top matches. Last.fm is used purely as a read-only REST API with an API key — there is no Last.fm OAuth/login flow. Suggested tracks carry a `__suggested` flag (see `src/types.ts`).
 
 **Liked songs:** Loaded on login with offset-based pagination (50 per page). "Play My Songs" shuffles the current page (`src/utils/shuffle.ts`, Fisher–Yates) and interleaves Last.fm suggestions into it (`src/utils/mixSongs.ts`, one suggestion every few tracks) before queueing via the SDK.
 

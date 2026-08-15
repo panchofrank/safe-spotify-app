@@ -58,6 +58,17 @@ page. (We previously used ngrok, but ngrok's free tier injects a browser-warning
 > `cloudflared`. When that happens you must update both `.env` **and** the Spotify dashboard with the
 > new URL, then restart `npm start`.
 
+## How suggestions work
+
+"Play my treasure songs" mixes the user's liked songs with suggested (non-favorite) tracks fetched
+from Last.fm. To keep things fresh, the suggestions are randomized each day:
+
+- A few liked songs are sampled as seeds and sent to Last.fm's `track.getsimilar`.
+- A larger pool of similar tracks is requested, then a random subset is resolved back to playable
+  Spotify tracks (dropping misses, already-liked songs, and duplicates).
+- All the shuffling is driven by a PRNG seeded from the current date, so the suggestions stay stable
+  within a day but change every day instead of always returning Last.fm's top matches.
+
 ## Available Scripts
 
 In the project directory, you can run:
