@@ -1,6 +1,12 @@
 # Spotify kid safe app
 Allows use of spotify on a web page without access to video functionality.
 
+## Production URL
+
+The app is deployed to GitHub Pages at:
+
+**https://panchofrank.github.io/safe-spotify-app/**
+
 ## Environment variables (`.env`)
 
 The app reads its config from a `.env` file in the project root (not committed). It must define:
