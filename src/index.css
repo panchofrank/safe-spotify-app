@@ -215,6 +215,37 @@ li.clickable:hover {
   animation: fun-pulse 1.8s ease-in-out infinite;
 }
 
+/* Search box styled to sit alongside the fun buttons */
+.search-input {
+  font-family: 'Baloo 2', 'Comic Sans MS', cursive, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0a3d62;
+  padding: 12px 22px;
+  margin: 6px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.35);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(10, 61, 98, 0.55);
+  font-weight: 700;
+}
+
+.search-input:focus {
+  border-color: #ffd34d;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 0 18px rgba(255, 211, 77, 0.6);
+}
+
+.search-input:focus-visible {
+  outline: 4px dashed #fff36b;
+  outline-offset: 3px;
+}
+
 @keyframes fun-pulse {
   0%, 100% { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.35); }
   50%      { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3), 0 0 24px #ffd34d; }
