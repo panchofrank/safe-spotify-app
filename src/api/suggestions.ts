@@ -6,8 +6,9 @@ import { searchTracks } from "./spotify";
 
 const SEED_COUNT = 5; // how many liked songs to seed from
 const SIMILAR_PER_SEED = 30; // similar tracks requested per seed
-const MAX_SUGGESTIONS = 12; // cap on resolved Spotify tracks
+const MAX_SUGGESTIONS = 40; // hard cap on resolved Spotify tracks
 const RESOLVE_POOL = MAX_SUGGESTIONS * 2; // how many candidates to resolve (some miss)
+const SUGGEST_RATIO = 2 / 3; // suggestions per liked song → ~2 in 5 of the play queue
 
 interface LastfmTrack {
     name?: string;
@@ -81,6 +82,7 @@ async function resolveOnSpotify(token: string, artist: string, name: string): Pr
  * back to playable Spotify tracks, dropping anything already liked or duplicated.
  * All randomness is seeded from the date, so the suggestions stay stable within
  * a day but change every day instead of always returning the same top matches.
+ * The count is capped so suggestions make up ~2 in 5 of the play queue.
  */
 export async function fetchSuggestions(token: string, likedTracks: Track[]): Promise<Track[]> {
     if (!token || !LASTFM_API_KEY || likedTracks.length === 0) return [];
@@ -128,5 +130,7 @@ export async function fetchSuggestions(token: string, likedTracks: Track[]): Pro
         byId.set(track.id, { ...track, __suggested: true });
     }
 
-    return Array.from(byId.values()).slice(0, MAX_SUGGESTIONS);
+    // 6. Cap so suggestions make up ~2 in 5 of the queue (suggested / liked = 2/3).
+    const suggestionCap = Math.min(MAX_SUGGESTIONS, Math.ceil(likedTracks.length * SUGGEST_RATIO));
+    return Array.from(byId.values()).slice(0, suggestionCap);
 }

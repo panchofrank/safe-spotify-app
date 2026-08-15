@@ -68,6 +68,8 @@ from Last.fm. To keep things fresh, the suggestions are randomized each day:
   Spotify tracks (dropping misses, already-liked songs, and duplicates).
 - All the shuffling is driven by a PRNG seeded from the current date, so the suggestions stay stable
   within a day but change every day instead of always returning Last.fm's top matches.
+- The number of suggestions scales with the liked-song library (roughly 2/3 as many), so about **2 in
+  5** of the played tracks are suggestions — the on-screen song list is mixed at the same ratio.
 
 ## Available Scripts
 

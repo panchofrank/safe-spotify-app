@@ -10,11 +10,20 @@ const track = (id: string, suggested = false): Track => ({
     ...(suggested ? { __suggested: true } : {}),
 });
 
-test('interleaves one suggestion after every 3 liked songs', () => {
+test('interleaves 2 suggestions after every 3 liked songs (~2 in 5)', () => {
+    const liked = ['l0', 'l1', 'l2', 'l3', 'l4', 'l5'].map((id) => track(id));
+    const suggested = ['s0', 's1', 's2'].map((id) => track(id, true));
+
+    const ids = mixSongs(liked, suggested).map((t) => t.id);
+
+    expect(ids).toEqual(['l0', 'l1', 'l2', 's0', 's1', 'l3', 'l4', 'l5', 's2']);
+});
+
+test('interleaves one suggestion per 3 liked songs when count is 1', () => {
     const liked = ['l0', 'l1', 'l2', 'l3', 'l4', 'l5'].map((id) => track(id));
     const suggested = ['s0', 's1'].map((id) => track(id, true));
 
-    const ids = mixSongs(liked, suggested).map((t) => t.id);
+    const ids = mixSongs(liked, suggested, 3, 1).map((t) => t.id);
 
     expect(ids).toEqual(['l0', 'l1', 'l2', 's0', 'l3', 'l4', 'l5', 's1']);
 });
